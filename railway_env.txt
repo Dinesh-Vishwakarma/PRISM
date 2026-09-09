@@ -1,7 +1,4 @@
-# Neo4j AuraDB Configuration (Used by the API)
-NEO4J_URI=neo4j+s://9b4f7ffc.databases.neo4j.io
-NEO4J_USER=9b4f7ffc
-NEO4J_PASSWORD=AEf5AL8VxPVupFZE5tCwUZL9XidPwFXwht_f7SuKV_s
+
 
 # Local Postgres Configuration (Used by API and docker-compose)
 POSTGRES_USER=prism_admin
@@ -13,7 +10,4 @@ POSTGRES_PORT=5432
 # Local Redis Configuration
 REDIS_URL=redis://localhost:6379
 
-# MinIO (Optional - for docker-compose if needed)
-MINIO_ROOT_USER=prism_minio_admin
-MINIO_ROOT_PASSWORD=prism_minio_secure
 

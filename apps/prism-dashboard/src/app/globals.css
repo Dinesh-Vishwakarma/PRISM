@@ -4,20 +4,34 @@
   --color-midnight: #1A202C;
   --color-platinum: #E5E4E2;
   --color-cream: #FFFDD0;
+  --color-silver: #A0AEC0;
+  --color-primary: #FFFDD0;
+  --color-background: #1A202C;
 
   --color-glass-border: rgba(255, 255, 255, 0.1);
   --color-glass-bg: rgba(255, 255, 255, 0.05);
+
+  --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
+  --font-space-grotesk: var(--font-space-grotesk), "Space Grotesk", sans-serif;
 }
 
 @layer base {
   body {
     background-color: var(--color-midnight);
     color: var(--color-platinum);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   }
 }
 
 @layer utilities {
+  .font-space-grotesk {
+    font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  }
+
   .glass-panel {
     background: var(--color-glass-bg);
     backdrop-filter: blur(20px);
@@ -57,7 +71,7 @@
   }
 
   .progress-bar-bg {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
     overflow: hidden;
   }
@@ -67,4 +81,65 @@
     height: 100%;
     border-radius: 9999px;
   }
+}
+
+/* React Flow Controls Styling for PRISM Cyber-Clay-Glass Dark Theme */
+.react-flow__controls {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 0.625rem !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: rgba(26, 32, 44, 0.92) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  margin: 12px !important;
+}
+
+.react-flow__controls-button {
+  background: rgba(26, 32, 44, 0.92) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #E5E4E2 !important;
+  fill: #E5E4E2 !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFDD0 !important;
+  fill: #FFFDD0 !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  color: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+
+.react-flow__controls-button:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+}
+
+.react-flow__attribution {
+  background: rgba(26, 32, 44, 0.75) !important;
+  color: rgba(229, 228, 226, 0.6) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+}
+
+.react-flow__attribution a {
+  color: rgba(229, 228, 226, 0.7) !important;
 }

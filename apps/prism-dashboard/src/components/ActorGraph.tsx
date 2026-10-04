@@ -131,7 +131,7 @@ export default function ActorGraph({ initialNodes = [], initialEdges = [] }: Act
         onConnect={onConnect}
         fitView
       >
-        <Background color="#ccc" gap={16} />
+        <Background color="rgba(255, 255, 255, 0.08)" gap={16} />
         <Controls />
       </ReactFlow>
     </div>

@@ -9,6 +9,8 @@ import {
   AlertOctagon, Clock 
 } from "lucide-react";
 
+import { API_BASE_URL } from "@/lib/api";
+
 export default function InvestigationPage() {
   const params = useParams();
   const id = params.id as string;
@@ -19,16 +21,39 @@ export default function InvestigationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch graph topology
-        const graphRes = await fetch(`https://prism-production-fd7b.up.railway.app/api/v1/graph/topology?cluster_id=${id}`);
-        const graphData = await graphRes.json();
-        
-        // Fetch cluster ML stats
-        const clustersRes = await fetch(`https://prism-production-fd7b.up.railway.app/api/v1/clusters/all`);
-        const clustersData = await clustersRes.json();
-        const cluster = clustersData.clusters.find((c: any) => c.id === id) || { confidence: 0.94, robustness: 0.88 };
+        // Fetch graph topology from backend
+        let graphData: any = { nodes: [], edges: [] };
+        try {
+          const graphRes = await fetch(`${API_BASE_URL}/api/v1/graph/topology/${id}`);
+          if (graphRes.ok) {
+            graphData = await graphRes.json();
+          }
+        } catch (e) {
+          console.warn("Could not reach graph topology endpoint, using empty topology:", e);
+        }
 
-        // Construct live data object merging mock AI analysis with real graph data
+        // Fetch cluster ML stats
+        let cluster = { confidence: 0.94, robustness: 0.88 };
+        try {
+          const clustersRes = await fetch(`${API_BASE_URL}/api/v1/clusters/all`);
+          if (clustersRes.ok) {
+            const clustersData = await clustersRes.json();
+            if (Array.isArray(clustersData?.clusters)) {
+              const found = clustersData.clusters.find((c: any) => c.id === id);
+              if (found) cluster = found;
+            }
+          }
+        } catch (e) {
+          console.warn("Could not reach clusters endpoint, using default metrics:", e);
+        }
+
+        // Safe graph structure with array guarantee
+        const safeGraph = {
+          nodes: Array.isArray(graphData?.nodes) ? graphData.nodes : [],
+          edges: Array.isArray(graphData?.edges) ? graphData.edges : []
+        };
+
+        // Construct live data object merging AI analysis with graph data
         const liveData = {
           id: id,
           title: `Operation Alpha (${id})`,
@@ -67,7 +92,7 @@ export default function InvestigationPage() {
               { message: "WEAK CONTRADICTION: Conflicting timezone patterns.", penalty: 0.15 }
             ]
           },
-          graph: graphData
+          graph: safeGraph
         };
         
         setInvData(liveData);

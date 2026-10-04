@@ -1,7 +1,8 @@
 fastapi==0.109.0
 uvicorn==0.27.0
-sqlalchemy
-psycopg2-binary
+sqlalchemy>=2.0.0
+psycopg[binary]>=3.1.0
+psycopg2-binary>=2.9.9
 neo4j==5.16.0
 pydantic-settings==2.1.0
-firebase-functions>=0.1.0
+

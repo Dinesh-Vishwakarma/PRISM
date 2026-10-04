@@ -44,29 +44,35 @@ const alertNodeStyle = {
   boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)'
 };
 
-export default function ActorGraph({ initialNodes, initialEdges }: { initialNodes: any[], initialEdges: any[] }) {
+export default function ActorGraph({ initialNodes = [], initialEdges = [] }: { initialNodes?: any[], initialEdges?: any[] }) {
+  const safeNodes = Array.isArray(initialNodes) ? initialNodes : [];
+  const safeEdges = Array.isArray(initialEdges) ? initialEdges : [];
+
   // Map API data to React Flow structure
-  const formattedNodes = initialNodes.map((n, i) => {
+  const formattedNodes = safeNodes.map((n, i) => {
     let style = nodeStyles;
-    if (n.data.type === "ActorCluster" || n.data.type === "Persona") {
+    const nodeType = n?.data?.type || "";
+    if (nodeType === "ActorCluster" || nodeType === "Persona") {
       style = actorNodeStyle;
-    } else if (n.data.alert) {
+    } else if (n?.data?.alert) {
       style = alertNodeStyle;
     }
     
     return {
-      id: n.id,
-      position: { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 }, // simple grid layout
-      data: { label: n.data.label },
+      id: String(n?.id ?? i),
+      position: n?.position && (n.position.x !== 0 || n.position.y !== 0) 
+        ? n.position 
+        : { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 },
+      data: { label: n?.data?.label || n?.id || "Node" },
       style
     };
   });
 
-  const formattedEdges = initialEdges.map(e => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    label: e.label,
+  const formattedEdges = safeEdges.map((e, i) => ({
+    id: String(e?.id ?? `edge-${i}`),
+    source: String(e?.source ?? ""),
+    target: String(e?.target ?? ""),
+    label: e?.label || "",
     style: { stroke: 'var(--color-platinum)', opacity: 0.5 },
     labelStyle: { fill: 'var(--color-platinum)', fontSize: 10 },
     labelBgStyle: { fill: 'var(--color-midnight)' },
@@ -78,6 +84,12 @@ export default function ActorGraph({ initialNodes, initialEdges }: { initialNode
 
   const [nodes, setNodes, onNodesChange] = useNodesState(formattedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(formattedEdges);
+
+  React.useEffect(() => {
+    setNodes(formattedNodes);
+    setEdges(formattedEdges);
+  }, [initialNodes, initialEdges]);
+
 
   const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 

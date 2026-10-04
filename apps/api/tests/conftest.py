@@ -1,10 +1,19 @@
 import sys
 import os
 
-# Get the path to the root PRISM directory
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# Get path to apps/api and root PRISM directory
+api_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-# Insert the root directory and services directly into the Python path
-sys.path.insert(0, base_dir)
-sys.path.insert(0, os.path.join(base_dir, 'services'))
+# Insert api directory first so `from main import app` and `from core...` work
+if api_dir not in sys.path:
+    sys.path.insert(0, api_dir)
+
+# Insert root directory and services
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+services_dir = os.path.join(root_dir, 'services')
+if os.path.exists(services_dir) and services_dir not in sys.path:
+    sys.path.insert(0, services_dir)
+
 

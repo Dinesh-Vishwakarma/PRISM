@@ -2,9 +2,17 @@ from fastapi import APIRouter, HTTPException
 import sys
 import os
 
-# Ensure the services directory is accessible
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
-sys.path.insert(0, base_dir)
+# Ensure the services directory is accessible across environments
+current_dir = os.path.dirname(__file__)
+for candidate in [
+    os.path.abspath(os.path.join(current_dir, '..', '..', '..', '..')),
+    os.path.abspath(os.path.join(current_dir, '..', '..')),
+    os.getcwd()
+]:
+    if os.path.exists(os.path.join(candidate, 'services')):
+        if candidate not in sys.path:
+            sys.path.insert(0, candidate)
+        break
 
 from pydantic import BaseModel
 from services.ml_engine.fusion import EvidenceFusionEngine
@@ -14,6 +22,7 @@ from neo4j import Session as Neo4jSession
 from db.session import get_neo4j
 from fastapi import APIRouter, Depends, HTTPException
 router = APIRouter()
+
 graph_engine = GraphEngine()
 
 import uuid

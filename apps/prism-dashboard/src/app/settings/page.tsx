@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Settings, Save, Server, Shield, BrainCircuit } from "lucide-react";
 
+import { API_BASE_URL } from "@/lib/api";
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
     platt_a: -0.8,
@@ -14,7 +16,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch("https://prism-production-fd7b.up.railway.app/api/v1/settings/")
+    fetch(`${API_BASE_URL}/api/v1/settings/`)
       .then(res => res.json())
       .then(data => setSettings(data))
       .catch(err => console.error("Failed to load settings:", err));
@@ -24,7 +26,7 @@ export default function SettingsPage() {
     setSaving(true);
     setSaved(false);
     try {
-      await fetch("https://prism-production-fd7b.up.railway.app/api/v1/settings/", {
+      await fetch(`${API_BASE_URL}/api/v1/settings/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings)

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Users, AlertTriangle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
+import { API_BASE_URL } from "@/lib/api";
+
 interface Cluster {
   id: string;
   title: string;
@@ -17,9 +19,7 @@ export default function ActorClustersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In production, this points to the real API
-    // e.g., fetch("https://prism-production-fd7b.up.railway.app/api/v1/clusters/all")
-    fetch("https://prism-production-fd7b.up.railway.app/api/v1/clusters/all")
+    fetch(`${API_BASE_URL}/api/v1/clusters/all`)
       .then((res) => res.json())
       .then((data) => {
         setClusters(data.clusters || []);

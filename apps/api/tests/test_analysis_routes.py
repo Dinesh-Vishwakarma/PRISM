@@ -3,22 +3,33 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-# Adjust path so `apps.api.main` can be imported
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.insert(0, os.path.join(base_dir, 'apps', 'api'))
-# Also add services to path for main.py imports
-sys.path.insert(0, os.path.join(base_dir, 'services', 'ml-engine'))
-sys.path.insert(0, os.path.join(base_dir, 'services', 'graph-engine'))
+# Ensure api directory and project root are in sys.path
+api_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+if api_dir in sys.path:
+    sys.path.remove(api_dir)
+sys.path.insert(0, api_dir)
 
 from main import app
 
+
+
+
 client = TestClient(app)
 
-def test_health_check():
+def test_root_endpoint():
     response = client.get("/")
     assert response.status_code == 200
     assert "message" in response.json()
     assert response.json()["message"] == "PRISM API is running."
+
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
+
 
 def test_analyze_cluster_missing_payload():
     response = client.post("/api/v1/analysis/cluster", json={})

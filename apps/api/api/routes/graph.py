@@ -30,18 +30,25 @@ def get_infrastructure_overlap(session: Neo4jSession = Depends(get_neo4j)):
     result = session.run(query)
     return [dict(record) for record in result]
 
-@router.get("/topology/{id}")
-def get_topology(id: str, session: Neo4jSession = Depends(get_neo4j)):
+from typing import Optional
+
+def _fetch_topology_data(target_id: str, session: Neo4jSession):
     """
-    Fetches the actual React Flow topology from Neo4j based on investigation or cluster id.
+    Helper to fetch React Flow topology from Neo4j based on investigation or cluster id.
     """
+    if not target_id:
+        return {"nodes": [], "edges": []}
+
     query = """
     MATCH (n)-[r]-(m)
     WHERE n.investigation_id = $id OR n.cluster_id = $id OR n.id = $id
     RETURN n, r, m
     LIMIT 300
     """
-    result = session.run(query, id=id)
+    try:
+        result = session.run(query, id=target_id)
+    except Exception as e:
+        return {"nodes": [], "edges": [], "error": str(e)}
     
     nodes_dict = {}
     edges_dict = {}
@@ -54,7 +61,7 @@ def get_topology(id: str, session: Neo4jSession = Depends(get_neo4j)):
             nodes_dict[n.element_id] = {
                 "id": str(n.element_id),
                 "data": {"label": name, "type": label},
-                "position": {"x": 0, "y": 0} # Frontend layout engine (like Dagre) should set positions
+                "position": {"x": 0, "y": 0}
             }
             
         m = record["m"]
@@ -82,3 +89,19 @@ def get_topology(id: str, session: Neo4jSession = Depends(get_neo4j)):
         "nodes": list(nodes_dict.values()),
         "edges": list(edges_dict.values())
     }
+
+@router.get("/topology")
+def get_topology_by_query(cluster_id: Optional[str] = None, id: Optional[str] = None, session: Neo4jSession = Depends(get_neo4j)):
+    """
+    Fetches the React Flow topology from Neo4j using query parameter (?cluster_id=... or ?id=...).
+    """
+    target = cluster_id or id or ""
+    return _fetch_topology_data(target, session)
+
+@router.get("/topology/{id}")
+def get_topology(id: str, session: Neo4jSession = Depends(get_neo4j)):
+    """
+    Fetches the actual React Flow topology from Neo4j based on investigation or cluster id in path.
+    """
+    return _fetch_topology_data(id, session)
+

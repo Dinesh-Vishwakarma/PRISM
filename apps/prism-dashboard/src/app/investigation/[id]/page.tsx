@@ -1,28 +1,102 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ActorGraph from "@/components/ActorGraph";
+import ActorGraph, { GraphInputNode, GraphInputEdge } from "@/components/ActorGraph";
 import { useParams } from "next/navigation";
 import { 
-  AlertTriangle, ShieldCheck, Zap, Activity, BrainCircuit, 
-  Crosshair, Network, Database, Wifi, User, Lock, FileText, 
-  AlertOctagon, Clock 
+  ShieldCheck, Zap, Activity, BrainCircuit, 
+  Network, Database, Wifi, User, FileText, 
+  AlertOctagon 
 } from "lucide-react";
 
 import { API_BASE_URL } from "@/lib/api";
+
+interface TrafficData {
+  prediction: string;
+  probabilities: Record<string, number>;
+  driftAlert?: boolean;
+}
+
+interface BehaviorData {
+  latencyScore: number;
+  activeHoursScore: number;
+  pattern?: string;
+}
+
+interface MetadataItem {
+  type: string;
+  value: string;
+  personas: string[];
+}
+
+interface EvidenceBreakdownItem {
+  name: string;
+  group: string;
+  score: number;
+  reliability: number;
+}
+
+interface StressTestItem {
+  noise: number;
+  confidence: number;
+}
+
+interface ContradictionItem {
+  message: string;
+  penalty: number;
+}
+
+interface AdversarialReport {
+  stress_test: StressTestItem[];
+  contradictions: ContradictionItem[];
+}
+
+interface InvestigationMetrics {
+  confidence: number;
+  robustness: number;
+  driftScore: number;
+  metadataHits: number;
+}
+
+interface InvestigationData {
+  id: string;
+  title: string;
+  metrics: InvestigationMetrics;
+  traffic: TrafficData;
+  behavior: BehaviorData;
+  metadata: MetadataItem[];
+  evidence_breakdown: EvidenceBreakdownItem[];
+  adversarial_report: AdversarialReport;
+  graph: {
+    nodes: GraphInputNode[];
+    edges: GraphInputEdge[];
+  };
+}
+
+interface TopologyResponse {
+  nodes?: GraphInputNode[];
+  edges?: GraphInputEdge[];
+}
+
+interface ClusterItem {
+  id: string;
+  confidence: number;
+  robustness: number;
+  [key: string]: unknown;
+}
 
 export default function InvestigationPage() {
   const params = useParams();
   const id = params.id as string;
 
   const [loading, setLoading] = useState(true);
-  const [invData, setInvData] = useState<any>(null);
+  const [invData, setInvData] = useState<InvestigationData | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch graph topology from backend
-        let graphData: any = { nodes: [], edges: [] };
+        let graphData: TopologyResponse = { nodes: [], edges: [] };
         try {
           const graphRes = await fetch(`${API_BASE_URL}/api/v1/graph/topology/${id}`);
           if (graphRes.ok) {
@@ -39,8 +113,8 @@ export default function InvestigationPage() {
           if (clustersRes.ok) {
             const clustersData = await clustersRes.json();
             if (Array.isArray(clustersData?.clusters)) {
-              const found = clustersData.clusters.find((c: any) => c.id === id);
-              if (found) cluster = found;
+              const found = (clustersData.clusters as ClusterItem[]).find((c) => c.id === id);
+              if (found) cluster = { confidence: found.confidence, robustness: found.robustness };
             }
           }
         } catch (e) {
@@ -186,7 +260,7 @@ export default function InvestigationPage() {
 
           <div className="space-y-3">
             <div className="text-sm opacity-70">Random Forest Probability Distribution</div>
-            {Object.entries(invData.traffic.probabilities).map(([label, prob]: [string, any]) => (
+            {Object.entries(invData.traffic.probabilities).map(([label, prob]: [string, number]) => (
               <div key={label}>
                 <div className="flex justify-between text-xs mb-1">
                   <span>{label}</span>
@@ -232,7 +306,7 @@ export default function InvestigationPage() {
               <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Metadata Leaks</h2>
             </div>
             
-            {invData.metadata.map((meta: any, idx: number) => (
+            {invData.metadata.map((meta, idx) => (
               <div key={idx} className="bg-purple-950/20 p-3 rounded-lg border border-purple-500/20">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-semibold text-purple-300">{meta.type}</span>
@@ -258,7 +332,7 @@ export default function InvestigationPage() {
           </div>
           
           <div className="space-y-5">
-            {invData.evidence_breakdown.map((ev: any, idx: number) => (
+            {invData.evidence_breakdown.map((ev, idx) => (
               <div key={idx} className="relative">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-semibold">
@@ -293,7 +367,7 @@ export default function InvestigationPage() {
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20">
               <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Noise Injection (Stress Test)</h3>
               <div className="space-y-3">
-                {invData.adversarial_report.stress_test.map((test: any, idx: number) => (
+                {invData.adversarial_report.stress_test.map((test, idx) => (
                   <div key={idx} className="flex items-center justify-between text-sm">
                     <span>Noise ±{(test.noise * 100).toFixed(0)}%</span>
                     <span className="font-mono bg-black/30 px-2 py-1 rounded">Conf: {(test.confidence * 100).toFixed(0)}%</span>
@@ -305,7 +379,7 @@ export default function InvestigationPage() {
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20 flex flex-col">
               <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Contradiction Analysis</h3>
               <div className="flex-1 space-y-3">
-                {invData.adversarial_report.contradictions.map((contra: any, idx: number) => (
+                {invData.adversarial_report.contradictions.map((contra, idx) => (
                   <div key={idx} className="text-sm text-red-200">
                     <p className="mb-2">{contra.message}</p>
                     <p className="font-mono text-red-400 bg-red-950/50 px-2 py-1 inline-block rounded">Penalty: -{(contra.penalty * 100).toFixed(0)}%</p>

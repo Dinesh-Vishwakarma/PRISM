@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings, Save, Server, Shield, BrainCircuit } from "lucide-react";
+import { Settings, Save, Shield, BrainCircuit } from "lucide-react";
 
 import { API_BASE_URL } from "@/lib/api";
 

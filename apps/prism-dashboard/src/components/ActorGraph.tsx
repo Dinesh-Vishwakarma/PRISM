@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -8,7 +8,8 @@ import {
   addEdge,
   Background,
   Controls,
-  MarkerType
+  MarkerType,
+  Connection
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -44,43 +45,71 @@ const alertNodeStyle = {
   boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)'
 };
 
-export default function ActorGraph({ initialNodes = [], initialEdges = [] }: { initialNodes?: any[], initialEdges?: any[] }) {
-  const safeNodes = Array.isArray(initialNodes) ? initialNodes : [];
-  const safeEdges = Array.isArray(initialEdges) ? initialEdges : [];
+export interface GraphInputNode {
+  id?: string | number;
+  position?: { x: number; y: number };
+  data?: {
+    label?: string;
+    type?: string;
+    alert?: boolean;
+    [key: string]: unknown;
+  };
+  style?: React.CSSProperties;
+}
 
+export interface GraphInputEdge {
+  id?: string | number;
+  source?: string | number;
+  target?: string | number;
+  label?: string;
+  [key: string]: unknown;
+}
+
+interface ActorGraphProps {
+  initialNodes?: GraphInputNode[];
+  initialEdges?: GraphInputEdge[];
+}
+
+export default function ActorGraph({ initialNodes = [], initialEdges = [] }: ActorGraphProps) {
   // Map API data to React Flow structure
-  const formattedNodes = safeNodes.map((n, i) => {
-    let style = nodeStyles;
-    const nodeType = n?.data?.type || "";
-    if (nodeType === "ActorCluster" || nodeType === "Persona") {
-      style = actorNodeStyle;
-    } else if (n?.data?.alert) {
-      style = alertNodeStyle;
-    }
-    
-    return {
-      id: String(n?.id ?? i),
-      position: n?.position && (n.position.x !== 0 || n.position.y !== 0) 
-        ? n.position 
-        : { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 },
-      data: { label: n?.data?.label || n?.id || "Node" },
-      style
-    };
-  });
+  const formattedNodes = useMemo(() => {
+    const safeNodes = Array.isArray(initialNodes) ? initialNodes : [];
+    return safeNodes.map((n, i) => {
+      let style = nodeStyles;
+      const nodeType = n?.data?.type || "";
+      if (nodeType === "ActorCluster" || nodeType === "Persona") {
+        style = actorNodeStyle;
+      } else if (n?.data?.alert) {
+        style = alertNodeStyle;
+      }
+      
+      return {
+        id: String(n?.id ?? i),
+        position: n?.position && (n.position.x !== 0 || n.position.y !== 0) 
+          ? n.position 
+          : { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 },
+        data: { label: n?.data?.label || n?.id || "Node" },
+        style
+      };
+    });
+  }, [initialNodes]);
 
-  const formattedEdges = safeEdges.map((e, i) => ({
-    id: String(e?.id ?? `edge-${i}`),
-    source: String(e?.source ?? ""),
-    target: String(e?.target ?? ""),
-    label: e?.label || "",
-    style: { stroke: 'var(--color-platinum)', opacity: 0.5 },
-    labelStyle: { fill: 'var(--color-platinum)', fontSize: 10 },
-    labelBgStyle: { fill: 'var(--color-midnight)' },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: 'var(--color-platinum)',
-    },
-  }));
+  const formattedEdges = useMemo(() => {
+    const safeEdges = Array.isArray(initialEdges) ? initialEdges : [];
+    return safeEdges.map((e, i) => ({
+      id: String(e?.id ?? `edge-${i}`),
+      source: String(e?.source ?? ""),
+      target: String(e?.target ?? ""),
+      label: e?.label || "",
+      style: { stroke: 'var(--color-platinum)', opacity: 0.5 },
+      labelStyle: { fill: 'var(--color-platinum)', fontSize: 10 },
+      labelBgStyle: { fill: 'var(--color-midnight)' },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: 'var(--color-platinum)',
+      },
+    }));
+  }, [initialEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(formattedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(formattedEdges);
@@ -88,10 +117,9 @@ export default function ActorGraph({ initialNodes = [], initialEdges = [] }: { i
   React.useEffect(() => {
     setNodes(formattedNodes);
     setEdges(formattedEdges);
-  }, [initialNodes, initialEdges]);
+  }, [formattedNodes, formattedEdges, setNodes, setEdges]);
 
-
-  const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
